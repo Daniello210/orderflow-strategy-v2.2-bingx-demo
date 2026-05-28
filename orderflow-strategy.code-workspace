@@ -1,0 +1,5 @@
+{
+  "folders": [{ "path": "." }],
+  "settings": { "terminal.integrated.cwd": "${workspaceFolder}/server" },
+  "extensions": { "recommendations": ["dbaeumer.vscode-eslint", "ms-azuretools.vscode-docker"] }
+}

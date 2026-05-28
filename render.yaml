@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: orderflow-strategy-bot
+    runtime: docker
+    dockerContext: ./server
+    dockerfilePath: ./server/Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: SIGNALS_ONLY
+        value: "true"
+      - key: BINGX_DEMO_EXECUTION
+        value: "false"
+      - key: BINGX_API_KEY
+        sync: false
+      - key: BINGX_API_SECRET
+        sync: false
+      - key: BINGX_DEMO_QUANTITIES_JSON
+        value: '{"ETHUSDT":0.01,"BTCUSDT":0.001}'
+      - key: SYMBOLS
+        value: ETHUSDT,BTCUSDT
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
