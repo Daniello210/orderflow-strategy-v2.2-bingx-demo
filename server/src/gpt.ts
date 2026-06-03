@@ -21,7 +21,7 @@ export async function composeCommentary(signal: Omit<Signal, "commentaryRu" | "q
       messages: [
         {
           role: "system",
-          content: "Ты пишешь короткий комментарий торгового сигнала на русском. Правила уже проверены кодом. Не обещай прибыль и не меняй направление. Отрази две фазы: встречная агрессия была поглощена, затем сторона сигнала перехватила инициативу."
+          content: "Ты пишешь короткий комментарий торгового сигнала на русском. Правила уже проверены кодом. Не обещай прибыль и не меняй направление. Отрази, что цена дошла до границы FVG, а orderbook подтвердил перевес стороны сигнала."
         },
         { role: "user", content: JSON.stringify(signal) }
       ],
@@ -38,11 +38,10 @@ export async function composeCommentary(signal: Omit<Signal, "commentaryRu" | "q
 
 function fallbackCommentary(signal: Omit<Signal, "commentaryRu" | "quality">): { quality: "strong" | "valid"; commentaryRu: string } {
   const side = signal.direction === "long" ? "покупатель" : "продавец";
-  const attack = signal.direction === "long" ? "продажи" : "покупки";
+  const boundary = signal.direction === "long" ? "нижней" : "верхней";
   const quality = signal.target.rr >= 3.5 ? "strong" : "valid";
   return {
     quality,
-    commentaryRu: `${capitalize(attack)} в зоне FVG были поглощены. После этого ${side} перехватил инициативу в подтверждающей фазе, и M15 подтвердил реакцию. Тейк выбран перед встречным кластером ликвидности.\nРиск: сигнал отменяется только стопом за M15-инвалидацией; результат не гарантирован.`
+    commentaryRu: `Цена дошла до ${boundary} границы FVG, а стакан показал перевес стороны сигнала: ${side} получил подтверждение по orderbook. Тейк выбран перед встречным кластером ликвидности.\nРиск: сигнал отменяется стопом за границей FVG; результат не гарантирован.`
   };
 }
-function capitalize(text: string): string { return text.charAt(0).toUpperCase() + text.slice(1); }

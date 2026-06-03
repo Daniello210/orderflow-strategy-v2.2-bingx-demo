@@ -28,24 +28,21 @@ export class TelegramNotifier {
   }
 
   async signal(signal: Signal): Promise<void> {
-    const attackName = signal.direction === "long" ? "Фаза атаки продавца" : "Фаза атаки покупателя";
-    const confirmationName = signal.direction === "long" ? "Фаза перехвата покупателем" : "Фаза перехвата продавцом";
+    const boundaryName = signal.direction === "long" ? "нижняя граница FVG" : "верхняя граница FVG";
+    const dominanceName = signal.direction === "long" ? "перевес bids/покупателей" : "перевес asks/продавцов";
     await this.send([
-      `🟢 <b>СИГНАЛ ${signal.symbol} ${signal.direction.toUpperCase()}</b> <i>(по реакции FVG, не по тренду)</i>`,
+      `🟢 <b>СИГНАЛ ${signal.symbol} ${signal.direction.toUpperCase()}</b> <i>(граница FVG + orderbook)</i>`,
       "",
       `Вход: <code>${fmt(signal.entry)}</code>`,
       `Стоп: <code>${fmt(signal.stop)}</code>`,
       `Цель перед кластером: <code>${fmt(signal.target.takeProfit)}</code>`,
       `Кластер: <code>${fmt(signal.target.price)}</code> | потенциал <b>${signal.target.rr.toFixed(2)}R</b>`,
       "",
-      `<b>${attackName}</b>`,
-      `Buy: $${money(signal.flow.absorption.buyNotional)} | Sell: $${money(signal.flow.absorption.sellNotional)} | Δ $${signedMoney(signal.flow.absorption.delta)}`,
-      `Результат: встречная агрессия поглощена, цена удержала зону.`,
-      "",
-      `<b>${confirmationName}</b>`,
+      `<b>Подтверждение у границы</b>`,
+      `Граница: ${boundaryName}`,
       `Buy: $${money(signal.flow.confirmation.buyNotional)} | Sell: $${money(signal.flow.confirmation.sellNotional)} | Δ $${signedMoney(signal.flow.confirmation.delta)}`,
-      `Изменение цены: ${signedBps(signal.flow.confirmation.priceChangeBps)} bps`,
-      `Результат: сторона сделки перехватила инициативу.`,
+      `Отклонение от границы: ${signedBps(signal.flow.confirmation.priceChangeBps)} bps`,
+      `Результат: ${dominanceName} подтвердил сценарий.`,
       "",
       signal.commentaryRu,
       "",
