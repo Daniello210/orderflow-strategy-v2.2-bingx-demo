@@ -2,7 +2,7 @@ import type { Candle, Direction, FvgZone, Reaction } from "./types.js";
 
 // FVG определяет направление сценария, а не фильтр рыночного тренда.
 // Мы намеренно не проверяем bullish/bearish bias: контртрендовый FVG допустим,
-// если позже выполнены M15 reaction, orderflow и target/RR-фильтры.
+// если позже выполнены reaction candle, orderflow и target/RR-фильтры.
 export function detectFvgs(symbol: string, candles: Candle[], minBps: number): FvgZone[] {
   const zones: FvgZone[] = [];
   for (let i = 2; i < candles.length; i += 1) {
@@ -50,7 +50,7 @@ export function isPriceInsideZone(price: number, zone: FvgZone): boolean {
   return price >= zone.low && price <= zone.high;
 }
 
-export function confirmM15Reaction(zone: FvgZone, candle: Candle): Reaction {
+export function confirmTimeframeReaction(zone: FvgZone, candle: Candle): Reaction {
   if (!candle.closed || zone.status !== "touched") {
     return { confirmed: false, type: "none", candleCloseTime: candle.closeTime, close: candle.close };
   }
@@ -62,6 +62,7 @@ export function confirmM15Reaction(zone: FvgZone, candle: Candle): Reaction {
   const confirmed = candle.high >= zone.low && candle.close < mid && candle.close < candle.open;
   return { confirmed, type: confirmed ? "bearish_reclaim" : "none", candleCloseTime: candle.closeTime, close: candle.close };
 }
+
 
 export function stopForReaction(zone: FvgZone, reactionCandle: Candle): number {
   return zone.direction === "long"

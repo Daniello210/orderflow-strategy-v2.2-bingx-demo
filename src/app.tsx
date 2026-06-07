@@ -7,6 +7,7 @@ import { BookOpen, ChartBar } from "lucide-react";
 import { OrderAlerts } from "@/components/order-alerts";
 import { InfoAccordion } from "@/components/info";
 import { Button } from "./components/ui/button";
+import { AdminPanel } from "@/components/admin-panel";
 
 export default function App() {
 	return (
@@ -19,6 +20,7 @@ export default function App() {
 					</div>
 					<SymbolSelector />
 				</div>
+				<AdminPanel />
 				<div className="grid grid-cols-1 lg:grid-cols-2 sm:gap-4 gap-2">
 					<div className="space-y-3">
 						<h1 className="text-xl font-medium flex items-center gap-2">

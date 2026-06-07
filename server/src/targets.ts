@@ -27,7 +27,7 @@ export function selectTarget(direction: Direction, entry: number, stop: number, 
   const pivots = direction === "long" ? swingHighs(recent) : swingLows(recent);
   for (const price of pivots) {
     const ahead = direction === "long" ? price > entry : price < entry;
-    if (ahead) raw.push({ price, score: 3, features: [direction === "long" ? "h1_swing_high" : "h1_swing_low"] });
+    if (ahead) raw.push({ price, score: 3, features: [direction === "long" ? "structure_swing_high" : "structure_swing_low"] });
   }
 
   const significant = mergeNearby(raw, entry * 0.0008)

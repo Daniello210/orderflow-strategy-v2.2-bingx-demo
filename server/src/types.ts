@@ -78,6 +78,19 @@ export interface TargetCandidate {
   features: string[];
 }
 
+export interface RiskProfile {
+  label: "strong" | "balanced" | "fragile";
+  confirmationScore: number;
+  imbalanceRatio: number;
+  sideNotional: number;
+  opposingNotional: number;
+  falseBreakoutBps: number;
+  stopBufferBps: number;
+  targetBufferBps: number;
+  minRR: number;
+  notes: string[];
+}
+
 export interface DemoExecutionReceipt {
   mode: "disabled" | "vst";
   status: "not_sent" | "submitted" | "rejected";
@@ -97,6 +110,7 @@ export interface Signal {
   stop: number;
   target: TargetCandidate;
   flow: FlowSummary;
+  riskProfile: RiskProfile;
   quality: "strong" | "valid";
   commentaryRu: string;
   execution?: DemoExecutionReceipt;

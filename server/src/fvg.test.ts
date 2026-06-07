@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { confirmM15Reaction, detectFvgs } from "./fvg.js";
+import { confirmTimeframeReaction, detectFvgs } from "./fvg.js";
 import type { Candle, FvgZone } from "./types.js";
 
 function candle(open: number, high: number, low: number, close: number, time: number): Candle {
   return { openTime: time, closeTime: time + 1, open, high, low, close, volume: 1, closed: true };
 }
 
-test("detects bullish H1 FVG", () => {
+test("detects bullish FVG", () => {
   const zones = detectFvgs("ETHUSDT", [candle(100, 101, 99, 100, 1), candle(100, 102, 100, 101, 2), candle(104, 105, 103, 104, 3)], 1);
   assert.equal(zones.length, 1);
   assert.equal(zones[0].direction, "long");
@@ -15,9 +15,9 @@ test("detects bullish H1 FVG", () => {
   assert.equal(zones[0].high, 103);
 });
 
-test("confirms bullish M15 reclaim after touch", () => {
+test("confirms bullish reaction candle reclaim after touch", () => {
   const zone: FvgZone = { id: "x", symbol: "ETHUSDT", direction: "long", low: 100, high: 102, createdAt: 1, touchedAt: 2, status: "touched" };
-  const result = confirmM15Reaction(zone, candle(100.5, 103, 100, 102.5, 3));
+  const result = confirmTimeframeReaction(zone, candle(100.5, 103, 100, 102.5, 3));
   assert.equal(result.confirmed, true);
   assert.equal(result.type, "bullish_reclaim");
 });

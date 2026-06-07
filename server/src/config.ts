@@ -2,7 +2,7 @@ import "dotenv/config";
 import { z } from "zod";
 
 const envSchema = z.object({
-  SYMBOLS: z.string().default("ETHUSDT,BTCUSDT"),
+  SYMBOLS: z.string().default("ETHUSDT,BTCUSDT,SOLUSDT,XRPUSDT,NEARUSDT,LDOUSDT,WLDUSDT,RENDERUSDT,HYPEUSDT"),
   PORT: z.coerce.number().int().positive().default(8787),
   TIMEZONE: z.string().default("Europe/Warsaw"),
   MIN_FVG_BPS: z.coerce.number().positive().default(4),
@@ -11,7 +11,17 @@ const envSchema = z.object({
   MIN_TARGET_SCORE: z.coerce.number().nonnegative().default(4),
   TARGET_BUFFER_BPS: z.coerce.number().positive().default(3),
   FVG_BOUNDARY_PROXIMITY_BPS: z.coerce.number().nonnegative().default(5),
-  FVG_STOP_BUFFER_BPS: z.coerce.number().nonnegative().default(2),
+  FVG_STOP_BUFFER_BPS: z.coerce.number().nonnegative().default(8),
+  SWING_MIN_ZONE_WIDTH_BPS: z.coerce.number().nonnegative().default(30),
+  SWING_MIN_RISK_BPS: z.coerce.number().nonnegative().default(25),
+  SWING_MIN_REWARD_BPS: z.coerce.number().nonnegative().default(80),
+  // Backward-compatible aliases. Prefer SWING_* in new configs.
+  DAYTRADE_MIN_ZONE_WIDTH_BPS: z.coerce.number().nonnegative().optional(),
+  DAYTRADE_MIN_RISK_BPS: z.coerce.number().nonnegative().optional(),
+  DAYTRADE_MIN_REWARD_BPS: z.coerce.number().nonnegative().optional(),
+  ADAPTIVE_STOP_EXTRA_BPS: z.coerce.number().nonnegative().default(24),
+  ADAPTIVE_TARGET_BUFFER_MIN_BPS: z.coerce.number().nonnegative().default(1),
+  ADAPTIVE_TARGET_BUFFER_MAX_BPS: z.coerce.number().nonnegative().default(15),
   ORDERBOOK_IMBALANCE_RATIO: z.coerce.number().positive().default(1.15),
   MIN_FLOW_NOTIONAL_USDT: z.coerce.number().nonnegative().default(25_000),
   ABSORPTION_RATIO: z.coerce.number().positive().default(1.15),
@@ -31,17 +41,23 @@ const envSchema = z.object({
   BINGX_DEMO_EXECUTION: z.enum(["true", "false"]).default("false"),
   BINGX_API_KEY: z.string().default(""),
   BINGX_API_SECRET: z.string().default(""),
-  BINGX_DEMO_QUANTITIES_JSON: z.string().default('{"ETHUSDT":0.01,"BTCUSDT":0.001}'),
-  BINGX_RECV_WINDOW: z.coerce.number().int().positive().max(60000).default(5000)
+  BINGX_DEMO_QUANTITIES_JSON: z.string().default('{"ETHUSDT":0.01,"BTCUSDT":0.001,"SOLUSDT":0.1,"XRPUSDT":10,"NEARUSDT":1,"LDOUSDT":5,"WLDUSDT":5,"RENDERUSDT":1,"HYPEUSDT":1}'),
+  BINGX_RECV_WINDOW: z.coerce.number().int().positive().max(60000).default(5000),
+  BINGX_STOP_AFTER_AUTH_ERROR: z.enum(["true", "false"]).default("true"),
+  ADMIN_TOKEN: z.string().default("")
 });
 
 const parsed = envSchema.parse(process.env);
 
 export const config = {
   ...parsed,
+  SWING_MIN_ZONE_WIDTH_BPS: parsed.SWING_MIN_ZONE_WIDTH_BPS ?? parsed.DAYTRADE_MIN_ZONE_WIDTH_BPS ?? 30,
+  SWING_MIN_RISK_BPS: parsed.SWING_MIN_RISK_BPS ?? parsed.DAYTRADE_MIN_RISK_BPS ?? 25,
+  SWING_MIN_REWARD_BPS: parsed.SWING_MIN_REWARD_BPS ?? parsed.DAYTRADE_MIN_REWARD_BPS ?? 80,
   symbols: parsed.SYMBOLS.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
   signalsOnly: parsed.SIGNALS_ONLY === "true",
   BINGX_DEMO_EXECUTION: parsed.BINGX_DEMO_EXECUTION === "true",
+  BINGX_STOP_AFTER_AUTH_ERROR: parsed.BINGX_STOP_AFTER_AUTH_ERROR === "true",
   bingxDemoQuantities: parseQuantities(parsed.BINGX_DEMO_QUANTITIES_JSON),
   absorptionWindowMs: parsed.ABSORPTION_WINDOW_MINUTES * 60_000,
   confirmationWindowMs: parsed.CONFIRMATION_WINDOW_MINUTES * 60_000

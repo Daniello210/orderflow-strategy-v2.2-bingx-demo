@@ -19,6 +19,8 @@ interface BingXEnvelope {
 }
 
 export class BingXDemoExecutor {
+  private authBlocked = false;
+
   get enabled(): boolean {
     return config.BINGX_DEMO_EXECUTION;
   }
@@ -26,6 +28,13 @@ export class BingXDemoExecutor {
   async execute(signal: Signal): Promise<DemoExecutionReceipt> {
     if (!this.enabled) {
       return { mode: "disabled", status: "not_sent", message: "BingX Demo execution выключен." };
+    }
+    if (this.authBlocked) {
+      return {
+        mode: "vst",
+        status: "rejected",
+        message: "BingX Demo execution остановлен после auth-ошибки. Проверь BINGX_API_KEY/BINGX_API_SECRET и перезапусти сервер."
+      };
     }
 
     const quantity = config.bingxDemoQuantities[signal.symbol];
@@ -52,12 +61,17 @@ export class BingXDemoExecutor {
         message: "Демо-ордер отправлен в BingX VST вместе с TP/SL.",
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Неизвестная ошибка BingX Demo.";
+      if (config.BINGX_STOP_AFTER_AUTH_ERROR && isAuthError(message)) {
+        this.authBlocked = true;
+        console.error("BingX Demo auth error: execution paused until credentials are fixed and server is restarted.");
+      }
       return {
         mode: "vst",
         status: "rejected",
         bingxSymbol,
         quantity,
-        message: error instanceof Error ? error.message : "Неизвестная ошибка BingX Demo."
+        message
       };
     }
   }
@@ -131,4 +145,8 @@ async function signedPost(path: string, params: Record<string, string>): Promise
     throw new Error(`BingX Demo отклонил ордер: ${json.code ?? response.status} ${json.msg ?? body}`);
   }
   return json;
+}
+
+function isAuthError(message: string): boolean {
+  return message.includes("100413") || /incorrect apiKey/i.test(message);
 }

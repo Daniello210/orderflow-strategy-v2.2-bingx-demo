@@ -19,11 +19,11 @@ export class TelegramNotifier {
 
   async zoneTouched(zone: FvgZone, price: number): Promise<void> {
     await this.send([
-      `🟠 <b>${zone.symbol}: цена вошла в H1 FVG</b>`,
+      `🟠 <b>${zone.symbol}: цена вошла в H4 FVG</b>`,
       `Сценарий по FVG: <b>${zone.direction === "long" ? "LONG" : "SHORT"}</b> <i>(без фильтра тренда)</i>`,
       `Зона: <code>${fmt(zone.low)}–${fmt(zone.high)}</code>`,
       `Цена: <code>${fmt(price)}</code>`,
-      "Жду закрытие M15 и две фазы orderflow: поглощение → перехват инициативы."
+      "Жду закрытие H1 для подтверждения реакции, затем финальный перевес orderbook у границы FVG."
     ].join("\n"));
   }
 
@@ -37,6 +37,9 @@ export class TelegramNotifier {
       `Стоп: <code>${fmt(signal.stop)}</code>`,
       `Цель перед кластером: <code>${fmt(signal.target.takeProfit)}</code>`,
       `Кластер: <code>${fmt(signal.target.price)}</code> | потенциал <b>${signal.target.rr.toFixed(2)}R</b>`,
+      `Дистанция: риск ${bpsDistance(signal.entry, signal.stop)} bps | цель ${bpsDistance(signal.entry, signal.target.takeProfit)} bps`,
+      `Риск-профиль: <b>${riskLabel(signal.riskProfile.label)}</b> | score ${signal.riskProfile.confirmationScore}/100 | imbalance ${signal.riskProfile.imbalanceRatio.toFixed(2)}x`,
+      `Адаптивно: SL buffer ${signal.riskProfile.stopBufferBps.toFixed(2)} bps | TP buffer ${signal.riskProfile.targetBufferBps.toFixed(2)} bps | fake-out ${signal.riskProfile.falseBreakoutBps.toFixed(2)} bps`,
       "",
       `<b>Подтверждение у границы</b>`,
       `Граница: ${boundaryName}`,
@@ -55,6 +58,12 @@ function fmt(n: number): string { return n.toLocaleString("en-US", { maximumFrac
 function money(n: number): string { return Math.round(n).toLocaleString("en-US"); }
 function signedMoney(n: number): string { return `${n >= 0 ? "+" : "-"}${money(Math.abs(n))}`; }
 function signedBps(n: number | undefined): string { return n === undefined ? "н/д" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}`; }
+function bpsDistance(left: number, right: number): string { return ((Math.abs(left - right) / left) * 10_000).toFixed(2); }
+function riskLabel(value: Signal["riskProfile"]["label"]): string {
+  if (value === "strong") return "сильный";
+  if (value === "fragile") return "осторожный";
+  return "сбалансированный";
+}
 
 function executionText(signal: Signal): string {
   const execution = signal.execution;
